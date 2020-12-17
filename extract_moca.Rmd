@@ -1,0 +1,47 @@
+---
+title: "Extract MoCA Score"
+output: html_notebook
+---
+
+```{r}
+#setwd("~/Dropbox/R/moca_scan/")
+library(magick)
+require(pdftools)
+require(tesseract)
+```
+
+```{r}
+ocr_moca_pdf <- function(filename) {
+  raw <- image_read_pdf(filename)
+  cropped <- image_trim(raw)
+  return(image_ocr(cropped))
+}
+
+extract_moca_version <- function(ocr_moca) {
+  version_str <- substr(ocr, gregexpr("Version", ocr)[[1]][[1]], gregexpr("Version", ocr)[[1]][[1]]+27)
+  version <- substr(version_str, 8, 12)
+  version <- trimws(version)
+ return(as.numeric(version))
+}
+
+extract_moca_total <- function(ocr_moca) {
+  total_str <- substr(ocr, gregexpr("TOTAL", ocr)[[1]][[1]], gregexpr("TOTAL", ocr)[[1]][[1]]+10)
+  total <- substr(total_str, 6, 100)
+  total <- trimws(total)
+  total <- strsplit(total, "/")
+  if (total[[1]][[2]] == "30") {
+    total <- as.numeric(total[[1]][[1]])
+  } else {
+    stop("Error in OCR as total denominator 30 expected but not found.")
+}
+}
+
+```
+
+```{r}
+
+ocr <- ocr_moca_pdf("samples/moca25.pdf")
+extract_moca_total(ocr)
+extract_moca_version(ocr)
+
+```
